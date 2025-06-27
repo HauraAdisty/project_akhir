@@ -28,10 +28,12 @@ Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
+
 // Route untuk Pasien membuat booking
 Route::get('/bookings/create', [HauraBookingController::class, 'create'])->name('bookings.create');
 Route::post('/bookings', [HauraBookingController::class, 'store'])->name('bookings.store');
 Route::get('/bookings', [HauraBookingController::class, 'index'])->name('bookings.index');
+Route::patch('/bookings/{booking}/status', [HauraBookingController::class, 'updateStatus'])->name('bookings.updateStatus');
 
 // Route untuk Admin melihat semua booking dan mengubah statusnya
 Route::get('/bookings', [HauraBookingController::class, 'index'])->name('bookings.index');

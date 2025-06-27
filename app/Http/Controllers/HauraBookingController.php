@@ -30,6 +30,25 @@ class HauraBookingController extends Controller
         return view('booking.index_booking', compact('bookings'));
     }
 
+        public function updateStatus(Request $request, HauraBooking $booking)
+    {
+        // Otorisasi: Pastikan hanya admin yang bisa mengakses
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'AKSES DITOLAK');
+        }
+
+        // Validasi: Pastikan status yang dikirim valid
+        $request->validate([
+            'status' => 'required|in:Menunggu,Disetujui,Ditolak',
+        ]);
+
+        // Update status pada record booking yang dipilih
+        $booking->update(['status' => $request->status]);
+
+        // Kembali ke halaman daftar booking dengan pesan sukses
+        return redirect()->route('bookings.index')->with('success', 'Status booking berhasil diperbarui.');
+    }
+
      public function create(Request $request)
     {
         $jadwal_id = $request->query('jadwal_id');
