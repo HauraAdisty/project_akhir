@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\HauraUser;
 use Illuminate\Database\Eloquent\Model;
 
 class HauraBooking extends Model

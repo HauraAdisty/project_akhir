@@ -79,10 +79,10 @@
                             </ul>
                         </li>
                     @else
-                        {{-- <li class="nav-item">
+                        <li class="nav-item">
                             <a href="{{ route('login') }}" class="btn btn-outline-light me-2">Login</a>
                         </li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a href="{{ route('register') }}" class="btn btn-light">Register</a>
                         </li> --}}
                     @endguest

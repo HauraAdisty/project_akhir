@@ -2,63 +2,83 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HauraJadwal;
+use App\Models\HauraBooking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HauraBookingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        //
+        $user = Auth::user();
+        $bookings = null;
+
+        if ($user->role === 'admin') {
+            // Jika role adalah admin, ambil semua data booking beserta relasi user dan jadwalnya.
+            $bookings = HauraBooking::with(['user', 'jadwal.dokter'])->latest()->paginate(10);
+        } else {
+            // Jika role adalah pasien, hanya ambil data booking milik user yang sedang login.
+            $bookings = HauraBooking::where('user_id', $user->id)
+                                ->with('jadwal.dokter')
+                                ->latest()
+                                ->paginate(10);
+        }
+
+        // Kirim data bookings ke view 'bookings.index'
+        return view('booking.index_booking', compact('bookings'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+     public function create(Request $request)
     {
-        //
+        $jadwal_id = $request->query('jadwal_id');
+        $selectedJadwal = null;
+        $allJadwals = null;
+
+        if ($jadwal_id) {
+            // Jika ada jadwal_id, ambil data jadwal spesifik tersebut beserta relasi dokternya.
+            $selectedJadwal = HauraJadwal::with('dokter')->findOrFail($jadwal_id);
+        } else {
+            // Jika tidak ada, siapkan semua jadwal untuk dropdown (sebagai fallback)
+            $allJadwals = HauraJadwal::with('dokter')->get();
+        }
+
+        return view('booking.create_booking', [
+            'selectedJadwal' => $selectedJadwal,
+            'allJadwals' => $allJadwals,
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data booking baru ke database.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
-        //
-    }
+        // Validasi input dari form
+        $request->validate([
+            'jadwal_id' => 'required|exists:haura_jadwals,id',
+            'tanggal_konsultasi' => 'required|date|after_or_equal:today',
+            'keluhan' => 'required|string|min:10',
+        ], [
+            'tanggal_konsultasi.after_or_equal' => 'Tanggal konsultasi tidak boleh tanggal yang sudah lewat.',
+            'keluhan.required' => 'Mohon isikan keluhan yang Anda rasakan.',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        // Buat record booking baru
+        HauraBooking::create([
+            'user_id' => Auth::id(), // Mengambil ID user yang sedang login
+            'jadwal_id' => $request->jadwal_id,
+            'tanggal_konsultasi' => $request->tanggal_konsultasi,
+            'keluhan' => $request->keluhan,
+            'status' => 'Menunggu', // Status default saat booking dibuat
+        ]);
+        
+        // Arahkan ke halaman riwayat booking dengan pesan sukses
+        // Anda perlu membuat route dan view untuk 'bookings.index' nanti
+        return redirect()->route('dashboard')->with('success', 'Booking Anda telah berhasil dibuat dan menunggu persetujuan.');
     }
 }

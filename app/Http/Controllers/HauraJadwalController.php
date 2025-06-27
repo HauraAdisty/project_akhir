@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HauraDokter;
 use Illuminate\Http\Request;
 
 class HauraJadwalController extends Controller
@@ -12,6 +13,16 @@ class HauraJadwalController extends Controller
     public function index()
     {
         //
+    }
+
+      public function showByDokter(HauraDokter $dokter)
+    {
+        // Mengambil semua jadwal yang berelasi dengan dokter ini
+        // pastikan di model Dokter ada relasi public function jadwals()
+        $jadwals = $dokter->jadwals()->orderBy('hari')->get();
+
+        // Mengirim data dokter dan jadwalnya ke view baru
+        return view('jadwal.show_jadwal', compact('dokter', 'jadwals'));
     }
 
     /**
