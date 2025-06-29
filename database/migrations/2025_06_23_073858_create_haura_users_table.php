@@ -19,6 +19,7 @@ return new class extends Migration
         $table->enum('role', ['admin', 'pasien'])->default('pasien');
         $table->timestamps();
     });
+    
 }
     /**
      * Reverse the migrations.

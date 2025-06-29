@@ -3,6 +3,7 @@
 @section('title', 'List Dokter')
 @section('navDokter', 'active')
 
+
 @section('content')
     <h1>List Dokter</h1>
     <table class="table table-striped">

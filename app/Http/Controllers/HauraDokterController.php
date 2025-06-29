@@ -74,6 +74,7 @@ class HauraDokterController extends Controller
             // Jika semua berhasil, commit transaction
             DB::commit();
 
+
             return redirect()->route('home')->with('success', 'Data dokter dan jadwalnya berhasil ditambahkan.');
 
         } catch (\Exception $e) {

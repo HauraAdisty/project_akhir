@@ -2,6 +2,7 @@
 
 @section('title', 'Formulir Booking Konsultasi')
 
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
