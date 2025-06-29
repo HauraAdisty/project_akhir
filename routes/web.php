@@ -7,13 +7,14 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\HauraDokterController;
 use App\Http\Controllers\HauraJadwalController;
 use App\Http\Controllers\HauraBookingController;
+use App\Http\Middleware\CekRole;
 
 // Route::get('/', function () {
 //     return view('welcome');
 //});
 Route::get('/', [HauraDokterController::class, 'index'])->name('home');
 Route::get('/dokter', [HauraDokterController::class, 'list'])->name('dokter.list_dokter');
-Route::get('/dokter/create', [HauraDokterController::class, 'create'])->name('dokter.form_dokter');
+Route::get('/dokter/create', [HauraDokterController::class, 'create'])->name('dokter.form_dokter')->middleware('auth', CekRole::class);
 Route::post('/dokter', [HauraDokterController::class, 'store'])->name('dokter.store');
 Route::get('/dokter/{id}', [HauraDokterController::class, 'show'])->name('dokter.show');
 Route::put('/dokter/{id}', [HauraDokterController::class, 'update'])->name('dokter.update');
@@ -26,11 +27,13 @@ Route::get('/dashboard', [HauraBookingController::class, 'index'])->name('dashbo
 //Login
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('login', [AuthController::class, 'login']);
+Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('register');
+Route::post('register', [AuthController::class, 'register']);
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 
 // Route untuk Pasien membuat booking
-Route::get('/bookings/create', [HauraBookingController::class, 'create'])->name('bookings.create');
+Route::get('/bookings/create', [HauraBookingController::class, 'create'])->name('bookings.create')->middleware('auth');
 Route::post('/bookings', [HauraBookingController::class, 'store'])->name('bookings.store');
 Route::get('/bookings', [HauraBookingController::class, 'index'])->name('bookings.index');
 Route::patch('/bookings/{booking}/status', [HauraBookingController::class, 'updateStatus'])->name('bookings.updateStatus');

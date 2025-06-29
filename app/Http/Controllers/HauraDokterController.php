@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\HauraDokter;
+use App\Models\HauraJadwal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,21 +37,51 @@ class HauraDokterController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request) // Ganti StoreDokterRequest dengan Request untuk sementara
     {
-         $validated = $request->validate([
+        // 1. Validasi data dokter dan jadwal
+        $validatedData = $request->validate([
             'nama_dokter' => 'required|string|max:255',
-            'spesialis' => 'required|string|max:255',
+            'spesialis' => 'required|string|max:100',
             'no_hp' => 'required|string|max:20',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'jadwals' => 'required|array|min:1', // Memastikan setidaknya ada satu jadwal
+            'jadwals.*.hari' => 'required|string',
+            'jadwals.*.jam_mulai' => 'required',
+            'jadwals.*.jam_selesai' => 'required|after:jadwals.*.jam_mulai',
+            'jadwals.*.lokasi' => 'required|string|max:100',
         ]);
 
-        if ($request->hasFile('foto')) {
-            $validated['foto'] = $request->file('foto')->store('dokter', 'public');
-        }
+        // Gunakan transaction untuk memastikan semua data tersimpan atau tidak sama sekali
+        DB::beginTransaction();
+        try {
+            // 2. Simpan informasi dokter terlebih dahulu
+            $fotoPath = $request->file('foto')->store('dokters', 'public');
+            
+            $dokter = HauraDokter::create([
+                'nama_dokter' => $validatedData['nama_dokter'],
+                'spesialis' => $validatedData['spesialis'],
+                'no_hp' => $validatedData['no_hp'],
+                'foto' => $fotoPath,
+            ]);
 
-        HauraDokter::create($validated);
-        return redirect()->route('home')->with('success', 'Dokter berhasil ditambahkan');
+            // 3. Loop dan simpan setiap jadwal yang berelasi dengan dokter yang baru dibuat
+            foreach ($validatedData['jadwals'] as $jadwalData) {
+                $jadwal = new HauraJadwal($jadwalData);
+                $dokter->jadwals()->save($jadwal);
+            }
+
+            // Jika semua berhasil, commit transaction
+            DB::commit();
+
+            return redirect()->route('home')->with('success', 'Data dokter dan jadwalnya berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            // Jika terjadi error, batalkan semua yang sudah tersimpan
+            DB::rollBack();
+            // Redirect kembali dengan pesan error
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage())->withInput();
+        }
     }
 
     /**
